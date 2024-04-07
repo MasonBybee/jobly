@@ -1,7 +1,9 @@
 "use strict";
+require("dotenv").config();
+const DBLOGIN = process.env.DBLOGINTEST;
 
 describe("config can come from env", function () {
-  test("works", function() {
+  test("works", function () {
     process.env.SECRET_KEY = "abc";
     process.env.PORT = "5000";
     process.env.DATABASE_URL = "other";
@@ -18,10 +20,11 @@ describe("config can come from env", function () {
     delete process.env.BCRYPT_WORK_FACTOR;
     delete process.env.DATABASE_URL;
 
-    expect(config.getDatabaseUri()).toEqual("jobly");
+    expect(config.getDatabaseUri()).toEqual(`postgresql://${DBLOGIN}/jobly`);
     process.env.NODE_ENV = "test";
 
-    expect(config.getDatabaseUri()).toEqual("jobly_test");
+    expect(config.getDatabaseUri()).toEqual(
+      `postgresql://${DBLOGIN}/jobly_test`
+    );
   });
-})
-
+});
