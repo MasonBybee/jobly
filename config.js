@@ -11,6 +11,12 @@ const PORT = +process.env.PORT || 3001;
 
 const DBLOGIN = process.env.DBLOGIN;
 
+function simplifyConnectionString(connectionString) {
+  const pattern = /postgresql:\/\/[^/]*\/(.+)/;
+  const match = connectionString.match(pattern);
+  return match ? `postgresql:///${match[1]}` : connectionString;
+}
+
 // Use dev database, testing database, or via env var, production database
 function getDatabaseUri() {
   return process.env.NODE_ENV === "test"
@@ -27,7 +33,7 @@ console.log("Jobly Config:".green);
 console.log("SECRET_KEY:".yellow, SECRET_KEY);
 console.log("PORT:".yellow, PORT.toString());
 console.log("BCRYPT_WORK_FACTOR".yellow, BCRYPT_WORK_FACTOR);
-console.log("Database:".yellow, getDatabaseUri());
+console.log("Database:".yellow, simplifyConnectionString(getDatabaseUri()));
 console.log("---");
 
 module.exports = {
