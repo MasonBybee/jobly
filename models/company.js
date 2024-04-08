@@ -42,7 +42,7 @@ class Company {
   /** Find all companies.
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
-   * accepts filters nameLike, minEmployees, and maxEmployees
+   * accepts obj of filters nameLike, minEmployees, and maxEmployees
    * */
 
   static async findAll(filterObj) {
