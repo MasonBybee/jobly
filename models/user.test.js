@@ -13,8 +13,18 @@ const {
   commonAfterEach,
   commonAfterAll,
 } = require("./_testCommon");
-
-beforeAll(commonBeforeAll);
+let jobId;
+beforeAll(async () => {
+  await commonBeforeAll();
+  const resp = await db.query(
+    `INSERT INTO jobs
+           (title, salary, equity, company_handle)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id, title, salary, equity, company_handle AS "companyHandle"`,
+    ["test", 1000, "0.004", "c5"]
+  );
+  jobId = resp.rows[0].id;
+});
 beforeEach(commonBeforeEach);
 afterEach(commonAfterEach);
 afterAll(commonAfterAll);
@@ -214,14 +224,40 @@ describe("update", function () {
 describe("remove", function () {
   test("works", async function () {
     await User.remove("u1");
-    const res = await db.query(
-        "SELECT * FROM users WHERE username='u1'");
+    const res = await db.query("SELECT * FROM users WHERE username='u1'");
     expect(res.rows.length).toEqual(0);
   });
 
   test("not found if no such user", async function () {
     try {
       await User.remove("nope");
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
+
+/************************************** applyForJob */
+
+describe("applyForJob", function () {
+  test("works", async function () {
+    const application = await User.applyForJob(`u1`, jobId);
+    expect(application).toEqual({ applied: jobId });
+  });
+
+  test("not found if no such user", async function () {
+    try {
+      await User.applyForJob(`u433`, jobId);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("not found if no such job", async function () {
+    try {
+      await User.applyForJob(`u1`, 2147483646);
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
