@@ -84,6 +84,20 @@ describe("findAll", function () {
         numEmployees: 3,
         logoUrl: "http://c3.img",
       },
+      {
+        handle: "c4",
+        name: "C4",
+        description: "Desc4",
+        numEmployees: 4,
+        logoUrl: "http://c4.img",
+      },
+      {
+        handle: "c5",
+        name: "C5",
+        description: "Desc5",
+        numEmployees: 5,
+        logoUrl: "http://c5.img",
+      },
     ]);
   });
   test("works: name filter", async function () {
@@ -114,6 +128,20 @@ describe("findAll", function () {
         description: "Desc3",
         numEmployees: 3,
         logoUrl: "http://c3.img",
+      },
+      {
+        handle: "c4",
+        name: "C4",
+        description: "Desc4",
+        numEmployees: 4,
+        logoUrl: "http://c4.img",
+      },
+      {
+        handle: "c5",
+        name: "C5",
+        description: "Desc5",
+        numEmployees: 5,
+        logoUrl: "http://c5.img",
       },
     ]);
   });
@@ -165,14 +193,23 @@ describe("get", function () {
       description: "Desc1",
       numEmployees: 1,
       logoUrl: "http://c1.img",
+      jobs: [
+        {
+          title: "j1",
+          salary: 10000,
+          equity: "0",
+          companyHandle: "c1",
+        },
+      ],
     });
   });
 
   test("not found if no such company", async function () {
     try {
-      await Company.get("nope");
-      fail();
+      const response = await Company.get("nope");
+      expect(response.statusCode).toBe(404);
     } catch (err) {
+      console.log(err);
       expect(err instanceof NotFoundError).toBeTruthy();
     }
   });

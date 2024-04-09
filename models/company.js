@@ -111,11 +111,24 @@ class Company {
       [handle]
     );
 
-    const company = companyRes.rows[0];
+    if (!companyRes.rows[0]) throw new NotFoundError(`No company: ${handle}`);
+    else {
+      const jobRes = await db.query(
+        `
+    SELECT title,
+           salary,
+           equity,
+           company_handle AS "companyHandle"
+        FROM jobs
+        WHERE company_handle = $1`,
+        [handle]
+      );
 
-    if (!company) throw new NotFoundError(`No company: ${handle}`);
+      const company = companyRes.rows[0];
+      company.jobs = jobRes.rows;
 
-    return company;
+      return company;
+    }
   }
 
   /** Update company data with `data`.
