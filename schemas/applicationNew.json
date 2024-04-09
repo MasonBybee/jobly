@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "default": {},
+  "title": "Root Schema",
+  "required": ["username", "jobId"],
+  "properties": {
+    "username": {
+      "type": "string",
+      "default": "",
+      "title": "The username Schema",
+      "examples": ["MasonBybee"]
+    },
+    "jobId": {
+      "type": "integer",
+      "default": 0,
+      "title": "The jobId Schema",
+      "examples": [12]
+    }
+  },
+  "examples": [
+    {
+      "username": "MasonBybee",
+      "jobId": 12
+    }
+  ]
+}
