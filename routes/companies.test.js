@@ -115,6 +115,75 @@ describe("GET /companies", function () {
     });
   });
 
+  test("works with name filter", async function () {
+    const resp = await request(app).get(`/companies/?nameLike=4`);
+    expect(resp.body).toEqual({
+      companies: [
+        {
+          handle: "c4",
+          name: "C4",
+          description: "Desc4",
+          numEmployees: 4,
+          logoUrl: "http://c4.img",
+        },
+      ],
+    });
+  });
+
+  test("works with minEmployees filter", async function () {
+    const resp = await request(app).get(`/companies/?minEmployees=5`);
+    expect(resp.body).toEqual({
+      companies: [
+        {
+          handle: "c5",
+          name: "C5",
+          description: "Desc5",
+          numEmployees: 5,
+          logoUrl: "http://c5.img",
+        },
+      ],
+    });
+  });
+
+  test("works with maxEmployees filter", async function () {
+    const resp = await request(app).get(`/companies/?maxEmployees=1`);
+    expect(resp.body).toEqual({
+      companies: [
+        {
+          handle: "c1",
+          name: "C1",
+          description: "Desc1",
+          numEmployees: 1,
+          logoUrl: "http://c1.img",
+        },
+      ],
+    });
+  });
+
+  test("works with all filters", async function () {
+    const resp = await request(app).get(
+      `/companies/?nameLike=c&minEmployees=2&maxEmployees=3`
+    );
+    expect(resp.body).toEqual({
+      companies: [
+        {
+          handle: "c2",
+          name: "C2",
+          description: "Desc2",
+          numEmployees: 2,
+          logoUrl: "http://c2.img",
+        },
+        {
+          handle: "c3",
+          name: "C3",
+          description: "Desc3",
+          numEmployees: 3,
+          logoUrl: "http://c3.img",
+        },
+      ],
+    });
+  });
+
   test("fails: test next() handler", async function () {
     // there's no normal failure event which will cause this route to fail ---
     // thus making it hard to test that the error-handler works with it. This
