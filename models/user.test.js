@@ -24,6 +24,11 @@ beforeAll(async () => {
     ["test", 1000, "0.004", "c5"]
   );
   jobId = resp.rows[0].id;
+  const applicationResp = await db.query(
+    `INSERT INTO applications(username, job_id)
+    VALUES ('u1', $1)`,
+    [jobId]
+  );
 });
 beforeEach(commonBeforeEach);
 afterEach(commonAfterEach);
@@ -127,6 +132,7 @@ describe("findAll", function () {
         lastName: "U1L",
         email: "u1@email.com",
         isAdmin: false,
+        jobs: [jobId],
       },
       {
         username: "u2",
@@ -134,6 +140,7 @@ describe("findAll", function () {
         lastName: "U2L",
         email: "u2@email.com",
         isAdmin: false,
+        jobs: [],
       },
     ]);
   });
@@ -148,6 +155,7 @@ describe("get", function () {
       username: "u1",
       firstName: "U1F",
       lastName: "U1L",
+      jobs: [jobId],
       email: "u1@email.com",
       isAdmin: false,
     });
@@ -242,7 +250,7 @@ describe("remove", function () {
 
 describe("applyForJob", function () {
   test("works", async function () {
-    const application = await User.applyForJob(`u1`, jobId);
+    const application = await User.applyForJob(`u2`, jobId);
     expect(application).toEqual({ applied: jobId });
   });
 
@@ -257,7 +265,7 @@ describe("applyForJob", function () {
 
   test("not found if no such job", async function () {
     try {
-      await User.applyForJob(`u1`, 2147483646);
+      await User.applyForJob(`u2`, 2147483646);
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();

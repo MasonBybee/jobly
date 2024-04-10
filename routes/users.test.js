@@ -15,7 +15,23 @@ const {
   u3Token,
 } = require("./_testCommon");
 
-beforeAll(commonBeforeAll);
+let jobId;
+beforeAll(async () => {
+  await commonBeforeAll();
+  const resp = await db.query(
+    `INSERT INTO jobs
+           (title, salary, equity, company_handle)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id, title, salary, equity, company_handle AS "companyHandle"`,
+    ["test", 1000, "0.004", "c5"]
+  );
+  jobId = resp.rows[0].id;
+  const applicationResp = await db.query(
+    `INSERT INTO applications(username, job_id)
+    VALUES ('u2', $1)`,
+    [jobId]
+  );
+});
 beforeEach(commonBeforeEach);
 afterEach(commonAfterEach);
 afterAll(commonAfterAll);
@@ -156,6 +172,7 @@ describe("GET /users", function () {
           lastName: "U1L",
           email: "user1@user.com",
           isAdmin: false,
+          jobs: [],
         },
         {
           username: "u2",
@@ -163,6 +180,7 @@ describe("GET /users", function () {
           lastName: "U2L",
           email: "user2@user.com",
           isAdmin: false,
+          jobs: [jobId],
         },
         {
           username: "u3",
@@ -170,6 +188,7 @@ describe("GET /users", function () {
           lastName: "U3L",
           email: "user3@user.com",
           isAdmin: true,
+          jobs: [],
         },
       ],
     });
@@ -204,14 +223,15 @@ describe("GET /users", function () {
 describe("GET /users/:username", function () {
   test("works for admins", async function () {
     const resp = await request(app)
-      .get(`/users/u1`)
+      .get(`/users/u2`)
       .set("authorization", `Bearer ${u3Token}`);
     expect(resp.body).toEqual({
       user: {
-        username: "u1",
-        firstName: "U1F",
-        lastName: "U1L",
-        email: "user1@user.com",
+        username: "u2",
+        firstName: "U2F",
+        jobs: [jobId],
+        lastName: "U2L",
+        email: "user2@user.com",
         isAdmin: false,
       },
     });
@@ -232,6 +252,7 @@ describe("GET /users/:username", function () {
       user: {
         username: "u1",
         firstName: "U1F",
+        jobs: [],
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
@@ -383,5 +404,35 @@ describe("DELETE /users/:username", function () {
       .delete(`/users/nope`)
       .set("authorization", `Bearer ${u3Token}`);
     expect(resp.statusCode).toEqual(404);
+  });
+});
+
+describe("POST /users/:username/jobs/:id", function () {
+  test("works for admins", async function () {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${jobId}`)
+      .set("authorization", `Bearer ${u3Token}`);
+    expect(resp.body).toEqual({ applied: jobId });
+    expect(resp.statusCode).toBe(201);
+  });
+
+  test("works for user if username is user", async function () {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${jobId}`)
+      .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.body).toEqual({ applied: jobId });
+    expect(resp.statusCode).toBe(201);
+  });
+
+  test("unauth for standard user", async function () {
+    const resp = await request(app)
+      .post(`/users/u2/jobs/${jobId}`)
+      .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.statusCode).toBe(401);
+  });
+
+  test("unauth for anon", async function () {
+    const resp = await request(app).post(`/users/u2/jobs/${jobId}`);
+    expect(resp.statusCode).toBe(401);
   });
 });
