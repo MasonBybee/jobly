@@ -118,6 +118,99 @@ describe("GET /jobs", function () {
     });
   });
 
+  test("works with title filter", async function () {
+    const resp = await request(app).get("/jobs/?title=1");
+    const dataWithoutId = resp.body.jobs.map((j) => {
+      delete j.id;
+      return j;
+    });
+    expect({ jobs: dataWithoutId }).toEqual({
+      jobs: [
+        {
+          title: "j1",
+          salary: 50000,
+          equity: "0",
+          companyHandle: "c1",
+        },
+      ],
+    });
+  });
+
+  test("works with minSalary filter", async function () {
+    const resp = await request(app).get("/jobs/?minSalary=110000");
+    const dataWithoutId = resp.body.jobs.map((j) => {
+      delete j.id;
+      return j;
+    });
+    expect({ jobs: dataWithoutId }).toEqual({
+      jobs: [
+        {
+          title: "j3",
+          salary: 150000,
+          equity: "0.01",
+          companyHandle: "c3",
+        },
+      ],
+    });
+  });
+
+  test("works with hasEquity filter", async function () {
+    const resp = await request(app).get("/jobs/?hasEquity=true");
+    const dataWithoutId = resp.body.jobs.map((j) => {
+      delete j.id;
+      return j;
+    });
+    expect({ jobs: dataWithoutId }).toEqual({
+      jobs: [
+        {
+          title: "j2",
+          salary: 100000,
+          equity: "0.005",
+          companyHandle: "c2",
+        },
+        {
+          title: "j3",
+          salary: 150000,
+          equity: "0.01",
+          companyHandle: "c3",
+        },
+        {
+          title: "test",
+          salary: 1000,
+          equity: "0.004",
+          companyHandle: "c5",
+        },
+        ,
+      ],
+    });
+  });
+
+  test("works with all filters", async function () {
+    const resp = await request(app).get(
+      "/jobs/?nameLike=j&minSalary=1001&hasEquity=true"
+    );
+    const dataWithoutId = resp.body.jobs.map((j) => {
+      delete j.id;
+      return j;
+    });
+    expect({ jobs: dataWithoutId }).toEqual({
+      jobs: [
+        {
+          title: "j2",
+          salary: 100000,
+          equity: "0.005",
+          companyHandle: "c2",
+        },
+        {
+          title: "j3",
+          salary: 150000,
+          equity: "0.01",
+          companyHandle: "c3",
+        },
+      ],
+    });
+  });
+
   test("fails: test next() handler", async function () {
     // there's no normal failure event which will cause this route to fail ---
     // thus making it hard to test that the error-handler works with it. This
