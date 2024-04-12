@@ -46,46 +46,45 @@ class Company {
    * */
 
   static async findAll(filterObj) {
-    // More readable, less compact filter handler
+    // Initialize an array for parameters and a counter for parameter placeholders
+    const params = [];
+    let paramCounter = 1;
     const filters = [];
+
     if (filterObj) {
       const { nameLike, minEmployees, maxEmployees } = filterObj;
-      // push specified filters to filters array if the specified filter exists
+
+      // Use parameterized queries to prevent SQL injection
       if (nameLike) {
-        filters.push(`name ILIKE '%${nameLike}%'`);
+        filters.push(`name ILIKE $${paramCounter++}`);
+        params.push(`%${nameLike}%`);
       }
       if (minEmployees) {
-        filters.push(`num_employees >= ${minEmployees}`);
+        filters.push(`num_employees >= $${paramCounter++}`);
+        params.push(minEmployees);
       }
       if (maxEmployees) {
-        filters.push(`num_employees <= ${maxEmployees}`);
+        filters.push(`num_employees <= $${paramCounter++}`);
+        params.push(maxEmployees);
       }
     }
-    // If there are filters add WHERE and join filters with " AND "
+
+    // If there are filters, add WHERE and join filters with " AND "
     const whereClause =
       filters.length > 0 ? `WHERE ${filters.join(" AND ")}` : "";
 
-    const companiesRes = await db.query(
-      `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies 
-           ${
-             whereClause
-             // Old Poor-Readablity Filter handler
-             //  nameLike || minEmployees || maxEmployees
-             //    ? `WHERE
-             //     ${nameLike ? `name ILIKE '%${nameLike}%' ` : ""}
-             //     ${nameLike && (minEmployees || maxEmployees) ? "AND " : ""}
-             //     ${minEmployees ? `num_employees > ${minEmployees} ` : ""}
-             //     ${minEmployees && maxEmployees ? "AND " : ""}
-             //     ${maxEmployees ? `num_employees < ${maxEmployees}` : ""}`
-             //    : ""
-           }
-           ORDER BY name`
-    );
+    const query = `
+        SELECT handle,
+               name,
+               description,
+               num_employees AS "numEmployees",
+               logo_url AS "logoUrl"
+        FROM companies
+        ${whereClause}
+        ORDER BY name`;
+
+    // Execute the query with the params array
+    const companiesRes = await db.query(query, params);
     return companiesRes.rows;
   }
 

@@ -46,34 +46,46 @@ class Job {
    * */
 
   static async findAll(filterObj) {
-    // More readable, less compact filter handler
+    // Initialize an array for parameters and a counter for parameter placeholders
+    const params = [];
+    let paramCounter = 1;
     const filters = [];
+
     if (filterObj) {
       const { title, minSalary, hasEquity } = filterObj;
-      // push specified filters to filters array if the specified filter exists
+
+      // Use parameterized queries to prevent SQL injection
       if (title) {
-        filters.push(`title ILIKE '%${title}%'`);
+        filters.push(`title ILIKE $${paramCounter}`);
+        params.push(`%${title}%`);
+        paramCounter++;
       }
       if (minSalary) {
-        filters.push(`salary >= ${minSalary}`);
+        filters.push(`salary >= $${paramCounter}`);
+        params.push(minSalary);
+        paramCounter++;
       }
       if (hasEquity) {
         filters.push(`equity > 0`);
+        // 'equity > 0' does not require a parameter since it's a static check.
       }
     }
-    // If there are filters add WHERE and join filters with " AND "
+
+    // If there are filters, add WHERE and join filters with " AND "
     const whereClause =
       filters.length > 0 ? `WHERE ${filters.join(" AND ")}` : "";
 
-    const jobsRes = await db.query(
-      `SELECT id, title,
-                  salary,
-                  equity,
-                  company_handle AS "companyHandle"
-           FROM jobs
-           ${whereClause}
-           ORDER BY id`
-    );
+    const query = `
+        SELECT id, title,
+               salary,
+               equity,
+               company_handle AS "companyHandle"
+        FROM jobs
+        ${whereClause}
+        ORDER BY id`;
+
+    // Execute the query with the params array
+    const jobsRes = await db.query(query, params);
     return jobsRes.rows;
   }
 
